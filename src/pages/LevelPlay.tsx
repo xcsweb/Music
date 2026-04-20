@@ -180,8 +180,8 @@ const LevelPlay: React.FC = () => {
   }
 
   const currentTargetNote = targetNotes[currentIndex];
-  // 教学模式下，高亮目标音符以供提示
-  const activeNotes = level.type === 'teaching' && currentTargetNote ? [currentTargetNote] : [];
+  // 高亮目标音符以供提示
+  const activeNotes = currentTargetNote ? [currentTargetNote] : [];
   
   const isSequence = level.type === 'multi_note' || level.type === 'song' || level.type === 'practice' || level.type === 'regression_test';
 
