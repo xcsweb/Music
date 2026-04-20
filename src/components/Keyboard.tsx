@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import * as Tone from 'tone';
-
+import { useStore } from '../store/useStore';
 import { getNoteFromKey } from '../utils/keyboardMap';
 
 export interface KeyboardProps {
@@ -14,36 +14,42 @@ export interface KeyboardProps {
 type KeyType = 'white' | 'black';
 
 interface KeyConfig {
-  note: string;
+  baseNote: string;
+  octaveOffset: number;
   key: string;
   type: KeyType;
 }
 
 // 建立电脑按键与音符的映射关系 (Key Mapping)
 const KEYBOARD_KEYS: KeyConfig[] = [
-  { note: 'C4', key: 'A', type: 'white' },
-  { note: 'C#4', key: 'W', type: 'black' },
-  { note: 'D4', key: 'S', type: 'white' },
-  { note: 'D#4', key: 'E', type: 'black' },
-  { note: 'E4', key: 'D', type: 'white' },
-  { note: 'F4', key: 'F', type: 'white' },
-  { note: 'F#4', key: 'T', type: 'black' },
-  { note: 'G4', key: 'G', type: 'white' },
-  { note: 'G#4', key: 'Y', type: 'black' },
-  { note: 'A4', key: 'H', type: 'white' },
-  { note: 'A#4', key: 'U', type: 'black' },
-  { note: 'B4', key: 'J', type: 'white' },
-  { note: 'C5', key: 'K', type: 'white' },
-  { note: 'C#5', key: 'O', type: 'black' },
-  { note: 'D5', key: 'L', type: 'white' },
-  { note: 'D#5', key: 'P', type: 'black' },
-  { note: 'E5', key: ';', type: 'white' },
-  { note: 'F5', key: "'", type: 'white' },
+  { baseNote: 'C', octaveOffset: 0, key: 'A', type: 'white' },
+  { baseNote: 'C#', octaveOffset: 0, key: 'W', type: 'black' },
+  { baseNote: 'D', octaveOffset: 0, key: 'S', type: 'white' },
+  { baseNote: 'D#', octaveOffset: 0, key: 'E', type: 'black' },
+  { baseNote: 'E', octaveOffset: 0, key: 'D', type: 'white' },
+  { baseNote: 'F', octaveOffset: 0, key: 'F', type: 'white' },
+  { baseNote: 'F#', octaveOffset: 0, key: 'T', type: 'black' },
+  { baseNote: 'G', octaveOffset: 0, key: 'G', type: 'white' },
+  { baseNote: 'G#', octaveOffset: 0, key: 'Y', type: 'black' },
+  { baseNote: 'A', octaveOffset: 0, key: 'H', type: 'white' },
+  { baseNote: 'A#', octaveOffset: 0, key: 'U', type: 'black' },
+  { baseNote: 'B', octaveOffset: 0, key: 'J', type: 'white' },
+  { baseNote: 'C', octaveOffset: 1, key: 'K', type: 'white' },
+  { baseNote: 'C#', octaveOffset: 1, key: 'O', type: 'black' },
+  { baseNote: 'D', octaveOffset: 1, key: 'L', type: 'white' },
+  { baseNote: 'D#', octaveOffset: 1, key: 'P', type: 'black' },
+  { baseNote: 'E', octaveOffset: 1, key: ';', type: 'white' },
+  { baseNote: 'F', octaveOffset: 1, key: "'", type: 'white' },
 ];
+
+const KEY_WIDTH_WHITE = 60;
+const KEY_WIDTH_BLACK = 40;
 
 export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
   const [pressedNotes, setPressedNotes] = useState<Set<string>>(new Set());
   const synth = useRef<Tone.PolySynth | null>(null);
+  const baseOctave = useStore((state) => state.baseOctave);
+  const setBaseOctave = useStore((state) => state.setBaseOctave);
 
   const stopAllNotes = () => {
     setPressedNotes((prev) => {
@@ -57,20 +63,18 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
 
   // 初始化合成器
   useEffect(() => {
-    // 带有霓虹复古感的合成器音色配置
     synth.current = new Tone.PolySynth(Tone.Synth, {
       oscillator: {
-        type: 'sawtooth',
+        type: 'triangle8',
       },
       envelope: {
-        attack: 0.05,
-        decay: 0.2,
-        sustain: 0.4,
+        attack: 0.02,
+        decay: 0.1,
+        sustain: 0.3,
         release: 1,
       },
-    }).toDestination();
+    });
 
-    // 可以在这里加一点混响或者延迟效果，为了保持性能先不用，或者加上基本的 Chorus
     const chorus = new Tone.Chorus(4, 2.5, 0.5).toDestination().start();
     synth.current.connect(chorus);
 
@@ -81,58 +85,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
     };
   }, []);
 
-  // 处理按键按下
-  const handleKeyDown = async (e: KeyboardEvent) => {
-    if (e.repeat) return; // 防止长按重复触发
-    
-    // 从映射表中获取音符，处理大小写和 shift 状态
-    const note = getNoteFromKey(e.key);
-    if (!note) return;
-    
-    const config = KEYBOARD_KEYS.find((k) => k.note === note);
-
-    if (config) {
-      await Tone.start(); // 确保音频上下文已启动
-      setPressedNotes((prev) => {
-        const next = new Set(prev);
-        if (!next.has(config.note)) {
-          next.add(config.note);
-          synth.current?.triggerAttack(config.note);
-        }
-        return next;
-      });
-    }
-  };
-
-  // 处理按键抬起
-  const handleKeyUp = (e: KeyboardEvent) => {
-    const note = getNoteFromKey(e.key);
-    if (!note) return;
-    
-    const config = KEYBOARD_KEYS.find((k) => k.note === note);
-
-    if (config) {
-      setPressedNotes((prev) => {
-        const next = new Set(prev);
-        if (next.has(config.note)) {
-          next.delete(config.note);
-          synth.current?.triggerRelease([config.note]);
-        }
-        return next;
-      });
-    }
-  };
-
-  // 全局事件监听
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
-  }, []);
-
+  // 监听失去焦点和页面隐藏
   useEffect(() => {
     const handleBlur = () => stopAllNotes();
     const handleVisibilityChange = () => {
@@ -148,32 +101,84 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
     };
   }, []);
 
+  // 处理按键按下
+  const handleKeyDown = async (e: KeyboardEvent) => {
+    if (e.repeat) return; // 防止长按重复触发
+
+    // 处理数字键 1-7 切换八度
+    if (e.key >= '1' && e.key <= '7') {
+      setBaseOctave(parseInt(e.key));
+      return;
+    }
+
+    const note = getNoteFromKey(e.key, baseOctave);
+    if (!note) return;
+
+    await Tone.start(); // 确保音频上下文已启动
+    setPressedNotes((prev) => {
+      const next = new Set(prev);
+      if (!next.has(note)) {
+        next.add(note);
+        synth.current?.triggerAttack(note);
+      }
+      return next;
+    });
+  };
+
+  // 处理按键抬起
+  const handleKeyUp = (e: KeyboardEvent) => {
+    const note = getNoteFromKey(e.key, baseOctave);
+    if (!note) return;
+
+    setPressedNotes((prev) => {
+      const next = new Set(prev);
+      if (next.has(note)) {
+        next.delete(note);
+        synth.current?.triggerRelease([note]);
+      }
+      return next;
+    });
+  };
+
+  // 全局事件监听
+  useEffect(() => {
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyUp);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, [baseOctave, setBaseOctave]);
+
   // 鼠标/触摸交互处理
   const playNote = async (note: string) => {
     await Tone.start();
+    setPressedNotes((prev) => {
+      const next = new Set(prev);
+      next.add(note);
+      return next;
+    });
     synth.current?.triggerAttack(note);
-    setPressedNotes((prev) => new Set(prev).add(note));
   };
 
   const releaseNote = (note: string) => {
-    synth.current?.triggerRelease([note]);
     setPressedNotes((prev) => {
       const next = new Set(prev);
       next.delete(note);
       return next;
     });
+    synth.current?.triggerRelease([note]);
   };
 
   // 渲染按键
   const renderKeys = useMemo(() => {
-    const KEY_WIDTH_WHITE = 60; // 白键宽度
-    const KEY_WIDTH_BLACK = 40; // 黑键宽度
     let whiteKeyIndex = 0;
 
     return KEYBOARD_KEYS.map((config) => {
       const isWhite = config.type === 'white';
-      const isPressed = pressedNotes.has(config.note);
-      const isActive = activeNotes.includes(config.note);
+      const note = `${config.baseNote}${baseOctave + config.octaveOffset}`;
+      const isPressed = pressedNotes.has(note);
+      const isActive = activeNotes.includes(note);
 
       // 计算按键位置
       const leftPosition = isWhite
@@ -202,60 +207,63 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
 
       return (
         <motion.div
-          key={config.note}
+          key={note}
           className={`${baseClasses} ${isWhite ? whiteClasses : blackClasses}`}
           style={{
             left: leftPosition,
-            width: width,
-            height: height,
-            borderTopLeftRadius: 0,
-            borderTopRightRadius: 0,
+            width,
+            height,
           }}
-          initial={false}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
           animate={{
-            y: isPressed ? 4 : 0,
             scale: isPressed ? 0.98 : 1,
           }}
           transition={{ type: 'spring', stiffness: 400, damping: 20 }}
-          onMouseDown={() => playNote(config.note)}
-          onMouseUp={() => releaseNote(config.note)}
+          onMouseDown={() => playNote(note)}
+          onMouseUp={() => releaseNote(note)}
           onMouseLeave={() => {
-            if (pressedNotes.has(config.note)) releaseNote(config.note);
+            if (pressedNotes.has(note)) releaseNote(note);
           }}
           onTouchStart={(e) => {
             e.preventDefault();
-            playNote(config.note);
+            playNote(note);
           }}
           onTouchEnd={(e) => {
             e.preventDefault();
-            releaseNote(config.note);
+            releaseNote(note);
           }}
         >
           {/* 按键上的文字标签 */}
           <div className="flex flex-col items-center pointer-events-none">
-            <span className={`text-xs font-bold mb-1 ${isPressed ? 'drop-shadow-[0_0_8px_currentColor]' : ''}`}>
+            <span className={`text-xs font-bold mb-1 ${isPressed ? 'text-white' : ''}`}>
               {config.key}
             </span>
             <span className={`text-[10px] opacity-70 ${isPressed ? 'drop-shadow-[0_0_5px_currentColor]' : ''}`}>
-              {config.note}
+              {note}
             </span>
           </div>
         </motion.div>
       );
     });
-  }, [pressedNotes, activeNotes]);
+  }, [pressedNotes, activeNotes, baseOctave]);
 
   // 计算容器总宽度
   const totalWhiteKeys = KEYBOARD_KEYS.filter((k) => k.type === 'white').length;
   const containerWidth = totalWhiteKeys * 60;
 
   return (
-    <div className="flex justify-center items-center p-8 bg-gray-950 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(255,255,255,0.05)] border border-gray-800/50">
-      <div
-        className="relative"
-        style={{ width: containerWidth, height: 240 }}
-      >
-        {renderKeys}
+    <div className="flex flex-col items-center">
+      <div className="mb-4 text-cyan-400/80 text-sm font-medium tracking-wider bg-gray-900/50 px-4 py-2 rounded-full border border-cyan-900/30">
+        当前八度: {baseOctave} <span className="text-gray-500 ml-2 text-xs">(按数字键 1~7 切换)</span>
+      </div>
+      <div className="flex justify-center items-center p-8 bg-gray-950 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.8),inset_0_0_20px_rgba(255,255,255,0.05)] border border-gray-800/50">
+        <div
+          className="relative"
+          style={{ width: containerWidth, height: 240 }}
+        >
+          {renderKeys}
+        </div>
       </div>
     </div>
   );
