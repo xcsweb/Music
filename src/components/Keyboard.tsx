@@ -40,6 +40,16 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
   const [pressedNotes, setPressedNotes] = useState<Set<string>>(new Set());
   const synth = useRef<Tone.PolySynth | null>(null);
 
+  const stopAllNotes = () => {
+    setPressedNotes((prev) => {
+      const notes = Array.from(prev);
+      if (notes.length > 0) {
+        synth.current?.triggerRelease(notes);
+      }
+      return new Set();
+    });
+  };
+
   // 初始化合成器
   useEffect(() => {
     // 带有霓虹复古感的合成器音色配置
@@ -60,6 +70,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
     synth.current.connect(chorus);
 
     return () => {
+      stopAllNotes();
       synth.current?.dispose();
       chorus.dispose();
     };
@@ -108,6 +119,21 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('keyup', handleKeyUp);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleBlur = () => stopAllNotes();
+    const handleVisibilityChange = () => {
+      if (document.hidden) stopAllNotes();
+    };
+
+    window.addEventListener('blur', handleBlur);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('blur', handleBlur);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, []);
 
