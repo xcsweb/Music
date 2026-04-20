@@ -17,6 +17,7 @@ const LevelPlay: React.FC = () => {
   const [showSettlement, setShowSettlement] = useState(false);
   const [showFailure, setShowFailure] = useState(false);
   const [errorCount, setErrorCount] = useState(0);
+  const [countdown, setCountdown] = useState(2);
   const [feedback, setFeedback] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [targetNotes, setTargetNotes] = useState<string[]>([]);
 
@@ -132,6 +133,28 @@ const LevelPlay: React.FC = () => {
     };
   }, [currentIndex, isFinished, showSettlement, showFailure, level, targetNotes, store, navigate]);
 
+  // 失败自动返回重学逻辑
+  useEffect(() => {
+    if (showFailure) {
+      setCountdown(2);
+      const timer = setInterval(() => {
+        setCountdown((prev) => Math.max(0, prev - 1));
+      }, 1000);
+
+      const redirectTimer = setTimeout(() => {
+        if (level?.fallbackLevelId !== undefined) {
+          store.downgradeLevel(level.fallbackLevelId);
+        }
+        navigate('/');
+      }, 2000);
+
+      return () => {
+        clearInterval(timer);
+        clearTimeout(redirectTimer);
+      };
+    }
+  }, [showFailure, level?.fallbackLevelId, store, navigate]);
+
   // 结算处理
   const handleFinish = () => {
     if (level) {
@@ -150,13 +173,6 @@ const LevelPlay: React.FC = () => {
       setErrorCount(0);
       navigate(`/level/${level.id + 1}`);
     }
-  };
-
-  const handleFailureFinish = () => {
-    if (level?.fallbackLevelId !== undefined) {
-      store.downgradeLevel(level.fallbackLevelId);
-    }
-    navigate('/');
   };
 
   if (!level) {
@@ -283,14 +299,11 @@ const LevelPlay: React.FC = () => {
               测试未通过
             </h2>
             <p className="text-gray-300 mb-8">
-              错误次数过多（{errorCount} 次），请重新学习之前的关卡。
+              错误次数过多（{errorCount} 次），即将返回重新学习...
             </p>
-            <button
-              onClick={handleFailureFinish}
-              className="px-8 py-3 bg-gradient-to-r from-red-500 to-rose-600 rounded-full font-bold text-lg hover:from-red-400 hover:to-rose-500 transition-all shadow-[0_0_20px_rgba(248,113,113,0.4)] hover:shadow-[0_0_30px_rgba(248,113,113,0.6)]"
-            >
-              返回重新学习
-            </button>
+            <div className="text-gray-500 font-mono text-xl animate-pulse">
+              {countdown}s
+            </div>
           </div>
         </div>
       )}
