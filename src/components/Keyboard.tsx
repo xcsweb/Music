@@ -177,8 +177,36 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
     return KEYBOARD_KEYS.map((config) => {
       const isWhite = config.type === 'white';
       const note = `${config.baseNote}${baseOctave + config.octaveOffset}`;
+      
+      // 判断这个键是否在提示的 activeNotes 列表中
+      // 如果 activeNotes 中包含其他八度的音符，我们需要计算它对应的相对按键
+      let isActive = false;
+      let targetOctaveHint: number | null = null;
+
+      for (const activeNote of activeNotes) {
+        if (activeNote === note) {
+          isActive = true;
+          break;
+        }
+        // 如果音名相同，但八度不同，说明需要用户切换八度
+        const activeBaseNote = activeNote.replace(/\d+$/, '');
+        const activeOctave = parseInt(activeNote.replace(/^[A-G]#?/, ''));
+        
+        if (activeBaseNote === config.baseNote) {
+          // 计算当前按键在 activeOctave 下应该对应的 baseOctave 是多少
+          // 例如：目标是 C5，当前键位配置的 octaveOffset 是 0，那么需要的 baseOctave 就是 5
+          // 如果目标是 C5，当前键位配置的 octaveOffset 是 1（比如 K 键），那么需要的 baseOctave 就是 4
+          const requiredBaseOctave = activeOctave - config.octaveOffset;
+          
+          if (requiredBaseOctave >= 1 && requiredBaseOctave <= 7) {
+            isActive = true;
+            targetOctaveHint = requiredBaseOctave;
+            break;
+          }
+        }
+      }
+
       const isPressed = pressedNotes.has(note);
-      const isActive = activeNotes.includes(note);
 
       // 计算按键位置
       const leftPosition = isWhite
@@ -193,13 +221,17 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
       const whiteClasses = isPressed
         ? "bg-green-500/30 border-2 border-green-400 text-green-100 shadow-[0_0_20px_rgba(74,222,128,0.8),inset_0_0_15px_rgba(74,222,128,0.5)] z-0"
         : isActive
-          ? "bg-red-900/60 border-2 border-red-500 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.8)] animate-pulse z-0"
+          ? (targetOctaveHint !== null 
+            ? "bg-amber-900/60 border-2 border-amber-500 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.8)] animate-pulse z-0"
+            : "bg-red-900/60 border-2 border-red-500 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.8)] animate-pulse z-0")
           : "bg-gray-800/80 border-2 border-cyan-500/40 text-cyan-500/70 shadow-[0_0_10px_rgba(6,182,212,0.3)] hover:bg-gray-700/80 z-0";
 
       const blackClasses = isPressed
         ? "bg-green-500/30 border-2 border-green-400 text-green-100 shadow-[0_0_20px_rgba(74,222,128,0.8),inset_0_0_15px_rgba(74,222,128,0.5)] z-10"
         : isActive
-          ? "bg-red-900/60 border-2 border-red-500 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.8)] animate-pulse z-10"
+          ? (targetOctaveHint !== null 
+            ? "bg-amber-900/60 border-2 border-amber-500 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.8)] animate-pulse z-10"
+            : "bg-red-900/60 border-2 border-red-500 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.8)] animate-pulse z-10")
           : "bg-gray-900 border-2 border-cyan-800 text-cyan-700 shadow-[0_0_10px_rgba(6,182,212,0.2)] hover:bg-gray-800 z-10";
 
       const width = isWhite ? KEY_WIDTH_WHITE : KEY_WIDTH_BLACK;
@@ -236,6 +268,11 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
         >
           {/* 按键上的文字标签 */}
           <div className="flex flex-col items-center pointer-events-none">
+            {isActive && targetOctaveHint !== null && (
+              <span className="absolute -top-6 text-amber-400 text-[10px] font-bold px-1.5 py-0.5 bg-amber-900/80 rounded border border-amber-500/50 shadow-lg whitespace-nowrap">
+                先按数字 {targetOctaveHint}
+              </span>
+            )}
             <span className={`text-xs font-bold mb-1 ${isPressed ? 'text-white' : ''}`}>
               {config.key}
             </span>
