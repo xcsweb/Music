@@ -47,9 +47,11 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, isUnlocked, onClick }) => 
 
       <div className="mt-4 flex gap-2">
         <span className={`text-xs px-2 py-1 rounded border 
-          ${isUnlocked 
-            ? 'border-cyan-500/30 text-cyan-300 bg-cyan-950/50' 
-            : 'border-gray-600 text-gray-400 bg-gray-800'}`}
+          ${!isUnlocked 
+            ? 'border-gray-600 text-gray-400 bg-gray-800'
+            : level.type === 'theory'
+              ? 'border-amber-500/30 text-amber-300 bg-amber-950/50'
+              : 'border-cyan-500/30 text-cyan-300 bg-cyan-950/50'}`}
         >
           {getTypeLabel(level.type)}
         </span>
@@ -68,6 +70,7 @@ function getTypeLabel(type: Level['type']) {
     review: '智能复习',
     practice: '练习',
     regression_test: '回归测试',
+    theory: '乐理',
   };
   return map[type] || type;
 }

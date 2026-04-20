@@ -227,59 +227,79 @@ const LevelPlay: React.FC = () => {
       </header>
 
       {/* 状态显示区 */}
-      <div className="mb-12 h-32 flex flex-col items-center justify-center">
-        {level.type === 'review' && targetNotes.length === 0 ? (
-          <div className="text-2xl text-green-400 font-bold">目前没有需要复习的音符，太棒了！</div>
-        ) : (
-          <>
-            {isSequence ? (
-              <div className="flex items-center justify-center space-x-6 mb-4 h-20">
-                {targetNotes.slice(currentIndex, currentIndex + 5).map((note, idx) => (
+      {level.type !== 'theory' && (
+        <div className="mb-12 h-32 flex flex-col items-center justify-center">
+          {level.type === 'review' && targetNotes.length === 0 ? (
+            <div className="text-2xl text-green-400 font-bold">目前没有需要复习的音符，太棒了！</div>
+          ) : (
+            <>
+              {isSequence ? (
+                <div className="flex items-center justify-center space-x-6 mb-4 h-20">
+                  {targetNotes.slice(currentIndex, currentIndex + 5).map((note, idx) => (
+                    <div
+                      key={`${note}-${currentIndex + idx}`}
+                      className={`transition-all duration-300 flex items-center justify-center ${
+                        idx === 0
+                          ? 'text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] scale-110'
+                          : 'text-3xl font-bold text-gray-500 opacity-60'
+                      }`}
+                    >
+                      {note}
+                    </div>
+                  ))}
+                  {currentIndex + 5 < targetNotes.length && (
+                    <div className="text-3xl font-bold text-gray-500 opacity-40 tracking-widest">...</div>
+                  )}
+                </div>
+              ) : (
+                currentTargetNote && (
+                  <div className="text-6xl font-extrabold mb-4 tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] h-20 flex items-center justify-center">
+                    {currentTargetNote}
+                  </div>
+                )
+              )}
+              <div className="h-8">
+                {feedback && (
                   <div
-                    key={`${note}-${currentIndex + idx}`}
-                    className={`transition-all duration-300 flex items-center justify-center ${
-                      idx === 0
-                        ? 'text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] scale-110'
-                        : 'text-3xl font-bold text-gray-500 opacity-60'
+                    className={`text-xl font-semibold animate-pulse ${
+                      feedback.type === 'success'
+                        ? 'text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.8)]'
+                        : feedback.type === 'error'
+                        ? 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.8)]'
+                        : 'text-cyan-400'
                     }`}
                   >
-                    {note}
+                    {feedback.text}
                   </div>
-                ))}
-                {currentIndex + 5 < targetNotes.length && (
-                  <div className="text-3xl font-bold text-gray-500 opacity-40 tracking-widest">...</div>
                 )}
               </div>
-            ) : (
-              currentTargetNote && (
-                <div className="text-6xl font-extrabold mb-4 tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] h-20 flex items-center justify-center">
-                  {currentTargetNote}
-                </div>
-              )
-            )}
-            <div className="h-8">
-              {feedback && (
-                <div
-                  className={`text-xl font-semibold animate-pulse ${
-                    feedback.type === 'success'
-                      ? 'text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.8)]'
-                      : feedback.type === 'error'
-                      ? 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.8)]'
-                      : 'text-cyan-400'
-                  }`}
-                >
-                  {feedback.text}
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </div>
+      )}
 
-      <Keyboard activeNotes={activeNotes} />
+      {level.type === 'theory' ? (
+        <div className="max-w-2xl w-full bg-gray-900/80 border border-amber-500/30 rounded-2xl p-8 shadow-[0_0_30px_rgba(245,158,11,0.15)] mb-8 backdrop-blur-sm">
+          {level.theoryContent?.map((paragraph, idx) => (
+            <p key={idx} className="text-gray-300 text-lg leading-relaxed mb-4 last:mb-0">
+              {paragraph}
+            </p>
+          ))}
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={handleNextLevel}
+              className="px-8 py-3 bg-gradient-to-r from-amber-600 to-orange-600 rounded-full font-bold text-lg hover:from-amber-500 hover:to-orange-500 transition-all shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.6)] text-white"
+            >
+              我已了解，继续
+            </button>
+          </div>
+        </div>
+      ) : (
+        <Keyboard activeNotes={activeNotes} />
+      )}
 
       {/* 进度提示 */}
-      {targetNotes.length > 0 && (
+      {level.type !== 'theory' && targetNotes.length > 0 && (
         <div className="mt-8 text-gray-500 font-mono">
           进度: {Math.min(currentIndex + 1, targetNotes.length)} / {targetNotes.length}
         </div>

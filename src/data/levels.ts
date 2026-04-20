@@ -3,6 +3,36 @@ import type { Level } from '../store/useStore';
 export const LEVELS: Level[] = [
   {
     id: 1,
+    title: '认识钢琴与中央C',
+    description: '了解钢琴的88个琴键和中央C的位置。',
+    type: 'theory',
+    targetNotes: [],
+    requiredScore: 0,
+    autoNext: false,
+    theoryContent: [
+      '标准钢琴有88个琴键，包含52个白键和36个黑键。',
+      '琴键的排列是有规律的，每12个键（7个白键和5个黑键）构成一个完整的循环。',
+      '在钢琴的正中间，有一个非常重要的键叫作"中央C"（C4）。',
+      '我们通常从中央C开始学习，因为它是连接高音区和低音区的桥梁，也是最容易找到的基准点。'
+    ]
+  },
+  {
+    id: 2,
+    title: '认识简谱与五线谱',
+    description: '了解简谱和五线谱中的中央C。',
+    type: 'theory',
+    targetNotes: [],
+    requiredScore: 0,
+    autoNext: false,
+    theoryContent: [
+      '在简谱中，中央C通常用数字 "1" 表示，唱作 "Do"。',
+      '在五线谱中，中央C位于高音谱表的下加一线，或者低音谱表的上加一线。',
+      '无论是简谱还是五线谱，中央C都是我们认谱和弹奏的起点。',
+      '接下来，我们将正式开始学习如何在键盘上找到并弹奏中央C。'
+    ]
+  },
+  {
+    id: 3,
     title: '学习 C4',
     description: '学习钢琴键盘上的中央C位置，对应键盘按键 A。',
     type: 'teaching',
@@ -11,7 +41,7 @@ export const LEVELS: Level[] = [
     autoNext: true,
   },
   {
-    id: 2,
+    id: 4,
     title: '练习 C4',
     description: '连续弹奏5次C4以巩固记忆。',
     type: 'practice',
@@ -21,7 +51,7 @@ export const LEVELS: Level[] = [
     autoNext: true,
   },
   {
-    id: 3,
+    id: 5,
     title: '学习 D4',
     description: '学习C4右侧的D4音符，对应键盘按键 S。',
     type: 'teaching',
@@ -30,7 +60,7 @@ export const LEVELS: Level[] = [
     autoNext: true,
   },
   {
-    id: 4,
+    id: 6,
     title: '练习 D4',
     description: '连续弹奏5次D4以巩固记忆。',
     type: 'practice',
@@ -40,7 +70,7 @@ export const LEVELS: Level[] = [
     autoNext: true,
   },
   {
-    id: 5,
+    id: 7,
     title: '混合 C4-D4',
     description: '交替弹奏C4和D4。',
     type: 'practice',
@@ -49,7 +79,7 @@ export const LEVELS: Level[] = [
     autoNext: true,
   },
   {
-    id: 6,
+    id: 8,
     title: '学习 E4',
     description: '学习D4右侧的E4音符，对应键盘按键 D。',
     type: 'teaching',
@@ -58,7 +88,7 @@ export const LEVELS: Level[] = [
     autoNext: true,
   },
   {
-    id: 7,
+    id: 9,
     title: '练习 E4',
     description: '连续弹奏5次E4以巩固记忆。',
     type: 'practice',
@@ -68,18 +98,18 @@ export const LEVELS: Level[] = [
     autoNext: true,
   },
   {
-    id: 8,
+    id: 10,
     title: '阶段一回归测试 (C,D,E)',
     description: '测试C4, D4, E4的掌握情况，错误过多将退回重学。',
     type: 'regression_test',
     targetNotes: ['C4', 'D4', 'E4', 'E4', 'D4', 'C4'],
     requiredScore: 100,
     maxErrors: 2,
-    fallbackLevelId: 1,
+    fallbackLevelId: 3,
     autoNext: true,
   },
   {
-    id: 9,
+    id: 11,
     title: '简单曲段',
     description: '弹奏一段简单的旋律：C-D-E-C。',
     type: 'song',
@@ -88,7 +118,7 @@ export const LEVELS: Level[] = [
     autoNext: true,
   },
   {
-    id: 10,
+    id: 12,
     title: '学习 F4',
     description: '学习E4右侧的F4音符，对应键盘按键 F。',
     type: 'teaching',
@@ -97,7 +127,7 @@ export const LEVELS: Level[] = [
     autoNext: true,
   },
   {
-    id: 11,
+    id: 13,
     title: '练习 F4',
     description: '连续弹奏5次F4以巩固记忆。',
     type: 'practice',
@@ -107,7 +137,7 @@ export const LEVELS: Level[] = [
     autoNext: true,
   },
   {
-    id: 12,
+    id: 14,
     title: '学习 G4',
     description: '学习F4右侧的G4音符，对应键盘按键 G。',
     type: 'teaching',
@@ -116,7 +146,7 @@ export const LEVELS: Level[] = [
     autoNext: true,
   },
   {
-    id: 13,
+    id: 15,
     title: '练习 G4',
     description: '连续弹奏5次G4以巩固记忆。',
     type: 'practice',
@@ -126,18 +156,18 @@ export const LEVELS: Level[] = [
     autoNext: true,
   },
   {
-    id: 14,
+    id: 16,
     title: '阶段二回归测试 (C,D,E,F,G)',
     description: '测试C4到G4的掌握情况，错误过多将退回重学。',
     type: 'regression_test',
     targetNotes: ['C4', 'E4', 'G4', 'F4', 'D4', 'C4'],
     requiredScore: 100,
     maxErrors: 3,
-    fallbackLevelId: 10,
+    fallbackLevelId: 12,
     autoNext: true,
   },
   {
-    id: 15,
+    id: 17,
     title: '欢乐颂片段',
     description: '弹奏《欢乐颂》的经典片段。',
     type: 'song',
@@ -146,7 +176,7 @@ export const LEVELS: Level[] = [
     autoNext: true,
   },
   {
-    id: 16,
+    id: 18,
     title: '学习 A4',
     description: '学习G4右侧的A4音符，对应键盘按键 H。',
     type: 'teaching',
@@ -155,7 +185,7 @@ export const LEVELS: Level[] = [
     autoNext: true,
   },
   {
-    id: 17,
+    id: 19,
     title: '练习 A4',
     description: '连续弹奏5次A4以巩固记忆。',
     type: 'practice',
@@ -165,18 +195,18 @@ export const LEVELS: Level[] = [
     autoNext: true,
   },
   {
-    id: 18,
+    id: 20,
     title: '阶段三回归测试 (C~A)',
     description: '测试C4到A4的综合掌握情况。',
     type: 'regression_test',
     targetNotes: ['A4', 'G4', 'F4', 'E4', 'D4', 'C4', 'A4', 'F4'],
     requiredScore: 100,
     maxErrors: 3,
-    fallbackLevelId: 16,
+    fallbackLevelId: 18,
     autoNext: true,
   },
   {
-    id: 19,
+    id: 21,
     title: '曲目挑战：小星星',
     description: '弹奏经典儿歌《小星星》。',
     type: 'song',
@@ -185,7 +215,7 @@ export const LEVELS: Level[] = [
     autoNext: false,
   },
   {
-    id: 20,
+    id: 22,
     title: '智能复习：薄弱音符',
     description: '根据艾宾浩斯记忆曲线，复习你之前弹错的音符。',
     type: 'review',
