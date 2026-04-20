@@ -1,0 +1,4 @@
+- [x] `src/components/Keyboard.tsx` 的键盘黑键已从突兀的紫色改为与整体青蓝/深色主题一致的色调（如深灰配暗青色边框）。
+- [x] 目标提示仍保持为红色闪烁，按下反馈仍保持为绿色高亮。
+- [x] `src/data/levels.ts` 中的 `regression_test` 及其他中间曲目关卡已设置为 `autoNext: true`，通关后不再打断用户。
+- [x] UI 界面的整体色调更加和谐且统一，弹窗设计更简洁（如需）。

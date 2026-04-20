@@ -184,7 +184,7 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
         ? "bg-green-500/30 border-2 border-green-400 text-green-100 shadow-[0_0_20px_rgba(74,222,128,0.8),inset_0_0_15px_rgba(74,222,128,0.5)] z-10"
         : isActive
           ? "bg-red-900/60 border-2 border-red-500 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.8)] animate-pulse z-10"
-          : "bg-gray-900 border-2 border-fuchsia-500/50 text-fuchsia-500/70 shadow-[0_0_10px_rgba(217,70,239,0.4)] hover:bg-gray-800 z-10";
+          : "bg-gray-900 border-2 border-cyan-800 text-cyan-700 shadow-[0_0_10px_rgba(6,182,212,0.2)] hover:bg-gray-800 z-10";
 
       const width = isWhite ? KEY_WIDTH_WHITE : KEY_WIDTH_BLACK;
       const height = isWhite ? 240 : 150;

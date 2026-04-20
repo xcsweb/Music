@@ -76,7 +76,7 @@ export const LEVELS: Level[] = [
     requiredScore: 100,
     maxErrors: 2,
     fallbackLevelId: 1,
-    autoNext: false,
+    autoNext: true,
   },
   {
     id: 9,
@@ -85,7 +85,7 @@ export const LEVELS: Level[] = [
     type: 'song',
     targetNotes: ['C4', 'D4', 'E4', 'C4'],
     requiredScore: 100,
-    autoNext: false,
+    autoNext: true,
   },
   {
     id: 10,
@@ -134,7 +134,7 @@ export const LEVELS: Level[] = [
     requiredScore: 100,
     maxErrors: 3,
     fallbackLevelId: 10,
-    autoNext: false,
+    autoNext: true,
   },
   {
     id: 15,
@@ -143,7 +143,7 @@ export const LEVELS: Level[] = [
     type: 'song',
     targetNotes: ['E4', 'E4', 'F4', 'G4', 'G4', 'F4', 'E4', 'D4', 'C4', 'C4', 'D4', 'E4', 'E4', 'D4', 'D4'],
     requiredScore: 90,
-    autoNext: false,
+    autoNext: true,
   },
   {
     id: 16,
@@ -173,7 +173,7 @@ export const LEVELS: Level[] = [
     requiredScore: 100,
     maxErrors: 3,
     fallbackLevelId: 16,
-    autoNext: false,
+    autoNext: true,
   },
   {
     id: 19,
