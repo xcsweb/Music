@@ -33,6 +33,7 @@ export interface UserProgress {
   currentLevel: number;
   unlockedLevels: number[];
   failedNotes: FailedNoteRecord[];
+  baseOctave: number;
 }
 
 export interface Level {
@@ -56,12 +57,14 @@ interface AppState extends UserProgress {
   recordFailedNote: (note: string) => void;
   reviewNoteSuccess: (note: string) => void;
   resetProgress: () => void;
+  setBaseOctave: (octave: number) => void;
 }
 
 const initialState: UserProgress = {
   currentLevel: 1,
   unlockedLevels: [1],
   failedNotes: [],
+  baseOctave: 4,
 };
 
 export const useStore = create<AppState>()(
@@ -149,6 +152,8 @@ export const useStore = create<AppState>()(
       },
 
       resetProgress: () => set(initialState),
+
+      setBaseOctave: (octave: number) => set({ baseOctave: octave }),
     }),
     {
       name: 'piano-app-storage', // localStorage key

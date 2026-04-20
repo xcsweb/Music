@@ -53,7 +53,7 @@ const LevelPlay: React.FC = () => {
       if (isFinished || showSettlement || showFailure) return;
       if (e.repeat) return;
 
-      const pressedNote = getNoteFromKey(e.key);
+      const pressedNote = getNoteFromKey(e.key, store.baseOctave);
       if (!pressedNote) return;
 
       if (level?.type === 'teaching') {
