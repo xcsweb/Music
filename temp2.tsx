@@ -18,6 +18,7 @@ const LevelPlay: React.FC = () => {
   const [showSettlement, setShowSettlement] = useState(false);
   const [showFailure, setShowFailure] = useState(false);
   const [errorCount, setErrorCount] = useState(0);
+  const [countdown, setCountdown] = useState(2);
   const [feedback, setFeedback] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [targetNotes, setTargetNotes] = useState<string[]>([]);
 
@@ -25,8 +26,7 @@ const LevelPlay: React.FC = () => {
   const [dictationTarget, setDictationTarget] = useState<string>('');
   const [dictationRounds, setDictationRounds] = useState(0);
   const [dictationStreak, setDictationStreak] = useState(0);
-  const [replaysLeft, setReplaysLeft] = useState(3);
-  const [countdown, setCountdown] = useState(0);
+  const [replaysLeft, setReplaysLeft] = useState(0);
   const synthRef = useRef<Tone.PolySynth | null>(null);
 
   const isEarType = level?.type === 'ear_training' || level?.type === 'ear_dictation';
@@ -75,6 +75,10 @@ const LevelPlay: React.FC = () => {
   // 动态生成 review 模式的目标音符，并在组件挂载时只计算一次
   useEffect(() => {
     if (!level) return;
+    
+    // 更新当前学习的关卡记录
+    store.setCurrentLevel(level.id);
+
     if (level.type === 'review') {
       const now = Date.now();
       const notesToReview = store.failedNotes
@@ -92,39 +96,30 @@ const LevelPlay: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [level]);
 
-  // 失败自动返回重学逻辑
-  useEffect(() => {
-    if (showFailure) {
-      setCountdown(2);
-      const timer = setInterval(() => {
-        setCountdown((prev) => Math.max(0, prev - 1));
-      }, 1000);
-
-      const redirectTimer = setTimeout(() => {
-        if (level?.fallbackLevelId !== undefined) {
-          store.downgradeLevel(level.fallbackLevelId);
-        }
-        navigate('/');
-      }, 2000);
-
-      return () => {
-        clearInterval(timer);
-        clearTimeout(redirectTimer);
-      };
-    }
-  }, [showFailure, level?.fallbackLevelId, store, navigate]);
-
   // 处理没有复习音符的情况
   useEffect(() => {
     if (level?.type === 'review' && targetNotes.length === 0 && !isFinished) {
       setIsFinished(true);
-      setShowSettlement(true);
+      if (level.autoNext && level.id < LEVELS.length) {
+        setFeedback({ text: '无需复习，即将进入下一关...', type: 'success' });
+        setTimeout(() => {
+          store.unlockLevel(level.id + 1);
+          setShowSettlement(false);
+          navigate(`/level/${level.id + 1}`);
+        }, 1500);
+      } else if (!level.autoNext) {
+        setShowSettlement(true);
+      } else {
+        setTimeout(() => {
+          navigate('/');
+        }, 1500);
+      }
     }
-  }, [level, targetNotes.length, isFinished]);
+  }, [level, targetNotes.length, isFinished, navigate, store]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isFinished || showSettlement || showFailure) return;
+      if (isFinished || showSettlement || showFailure || !level) return;
       if (e.repeat) return;
 
       const pressedNote = getNoteFromKey(e.key, store.baseOctave);
@@ -146,24 +141,7 @@ const LevelPlay: React.FC = () => {
           
           if (newRounds >= requiredRounds && newStreak >= requiredStreak) {
             setIsFinished(true);
-            if (level?.autoNext && level?.id < LEVELS.length) {
-              setFeedback({ text: '太棒了！即将进入下一关...', type: 'success' });
-              setTimeout(() => {
-                store.unlockLevel(level!.id + 1);
-                setCurrentIndex(0);
-                setIsFinished(false);
-                setFeedback(null);
-                setErrorCount(0);
-                setShowSettlement(false);
-                setDictationRounds(0);
-                setDictationStreak(0);
-                navigate('/level/' + (level!.id + 1));
-              }, 1500);
-            } else if (!level?.autoNext) {
-              setTimeout(() => setShowSettlement(true), 1000);
-            } else {
-              setTimeout(() => navigate('/'), 1500);
-            }
+            setTimeout(() => setShowSettlement(true), 1000);
           } else {
             setTimeout(() => startNextDictationRound(), 1000);
           }
@@ -192,23 +170,24 @@ const LevelPlay: React.FC = () => {
         if (pressedNote === currentTarget) {
           if (currentIndex + 1 >= targetNotes.length) {
             setIsFinished(true);
-            if (level?.autoNext && level?.id !== undefined && level.id < LEVELS.length) {
+            if (level.autoNext && level.id < LEVELS.length) {
               setFeedback({ text: '太棒了！即将进入下一关...', type: 'success' });
               setTimeout(() => {
-                store.unlockLevel(level!.id + 1);
+                store.unlockLevel(level.id + 1);
                 setCurrentIndex(0);
                 setIsFinished(false);
                 setFeedback(null);
                 setErrorCount(0);
                 setShowSettlement(false);
-                setDictationRounds(0);
-                setDictationStreak(0);
-                navigate('/level/' + (level!.id + 1));
+                navigate(`/level/${level.id + 1}`);
               }, 1500);
-            } else if (!level?.autoNext) {
+            } else if (!level.autoNext) {
               setTimeout(() => setShowSettlement(true), 1000);
             } else {
-              setTimeout(() => navigate('/'), 1500);
+              // autoNext is true but it's the last level, return to home
+              setTimeout(() => {
+                navigate('/');
+              }, 1500);
             }
           } else {
             setCurrentIndex((prev) => prev + 1);
@@ -226,23 +205,23 @@ const LevelPlay: React.FC = () => {
           
           if (currentIndex + 1 >= targetNotes.length) {
             setIsFinished(true);
-            if (level?.autoNext && level?.id !== undefined && level.id < LEVELS.length) {
+            if (level.autoNext && level.id < LEVELS.length) {
               setFeedback({ text: '太棒了！即将进入下一关...', type: 'success' });
               setTimeout(() => {
-                store.unlockLevel(level!.id + 1);
+                store.unlockLevel(level.id + 1);
                 setCurrentIndex(0);
                 setIsFinished(false);
                 setFeedback(null);
                 setErrorCount(0);
                 setShowSettlement(false);
-                setDictationRounds(0);
-                setDictationStreak(0);
-                navigate('/level/' + (level!.id + 1));
+                navigate(`/level/${level.id + 1}`);
               }, 1500);
-            } else if (!level?.autoNext) {
+            } else if (!level.autoNext) {
               setTimeout(() => setShowSettlement(true), 1000);
             } else {
-              setTimeout(() => navigate('/'), 1500);
+              setTimeout(() => {
+                navigate('/');
+              }, 1500);
             }
           } else {
             setCurrentIndex((prev) => prev + 1);
@@ -267,30 +246,10 @@ const LevelPlay: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [
-    currentIndex,
-    isFinished,
-    showSettlement,
-    showFailure,
-    level,
-    targetNotes,
-    store,
-    isEarType,
-    dictationTarget,
-    dictationStreak,
-    dictationRounds,
-    startNextDictationRound,
-  ]);
+<<<<<<< ours
+  }, [currentIndex, isFinished, showSettlement, showFailure, level, targetNotes, store, navigate]);
 
-  // 结算处理
-  const handleFinish = () => {
-    if (level) {
-      store.unlockLevel(level.id + 1);
-    }
-    navigate('/');
-  };
-
-  // Auto return logic for failure
+  // 失败自动返回重学逻辑
   useEffect(() => {
     if (showFailure) {
       setCountdown(2);
@@ -311,14 +270,50 @@ const LevelPlay: React.FC = () => {
       };
     }
   }, [showFailure, level?.fallbackLevelId, store, navigate]);
+=======
+  }, [
+    currentIndex,
+    isFinished,
+    showSettlement,
+    showFailure,
+    level,
+    targetNotes,
+    store,
+    isEarType,
+    dictationTarget,
+    dictationStreak,
+    dictationRounds,
+    startNextDictationRound,
+  ]);
+>>>>>>> theirs
+
+  // 结算处理
+  const handleFinish = () => {
+    if (level) {
+      store.unlockLevel(level.id + 1);
+    }
+    navigate('/');
+  };
+
+  const handleNextLevel = () => {
+    if (level) {
+      store.unlockLevel(level.id + 1);
+      setCurrentIndex(0);
+      setFeedback(null);
+      setIsFinished(false);
+      setShowSettlement(false);
+      setErrorCount(0);
+      navigate(`/level/${level.id + 1}`);
+    }
+  };
 
   if (!level) {
     return <div className="text-white p-8">关卡不存在</div>;
   }
 
   const currentTargetNote = targetNotes[currentIndex];
-  // 教学模式下，高亮目标音符以供提示
-  const activeNotes = level.type === 'teaching' && currentTargetNote ? [currentTargetNote] : [];
+  // 高亮目标音符以供提示
+  const activeNotes = currentTargetNote ? [currentTargetNote] : [];
   
   const isSequence = level.type === 'multi_note' || level.type === 'song' || level.type === 'practice' || level.type === 'regression_test';
 
@@ -336,6 +331,41 @@ const LevelPlay: React.FC = () => {
       </header>
 
       {/* 状态显示区 */}
+<<<<<<< ours
+      {level.type !== 'theory' && (
+        <div className="mb-12 h-32 flex flex-col items-center justify-center">
+          {level.type === 'review' && targetNotes.length === 0 ? (
+            <div className="text-2xl text-green-400 font-bold">目前没有需要复习的音符，太棒了！</div>
+          ) : (
+            <>
+              {isSequence ? (
+                <div className="flex items-center justify-center space-x-6 mb-4 h-20">
+                  {targetNotes.slice(currentIndex, currentIndex + 5).map((note, idx) => (
+                    <div
+                      key={`${note}-${currentIndex + idx}`}
+                      className={`transition-all duration-300 flex items-center justify-center ${
+                        idx === 0
+                          ? 'text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] scale-110'
+                          : 'text-3xl font-bold text-gray-500 opacity-60'
+                      }`}
+                    >
+                      {note}
+                    </div>
+                  ))}
+                  {currentIndex + 5 < targetNotes.length && (
+                    <div className="text-3xl font-bold text-gray-500 opacity-40 tracking-widest">...</div>
+                  )}
+                </div>
+              ) : (
+                currentTargetNote && (
+                  <div className="text-6xl font-extrabold mb-4 tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] h-20 flex items-center justify-center">
+                    {currentTargetNote}
+                  </div>
+                )
+              )}
+              <div className="h-8">
+                {feedback && (
+=======
       <div className="mb-12 h-32 flex flex-col items-center justify-center">
         {isEarType ? (
           <>
@@ -382,62 +412,62 @@ const LevelPlay: React.FC = () => {
             {isSequence ? (
               <div className="flex items-center justify-center space-x-6 mb-4 h-20">
                 {targetNotes.slice(currentIndex, currentIndex + 5).map((note, idx) => (
+>>>>>>> theirs
                   <div
-                    key={`${note}-${currentIndex + idx}`}
-                    className={`transition-all duration-300 flex items-center justify-center ${
-                      idx === 0
-                        ? 'text-6xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] scale-110'
-                        : 'text-3xl font-bold text-gray-500 opacity-60'
+                    className={`text-xl font-semibold animate-pulse ${
+                      feedback.type === 'success'
+                        ? 'text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.8)]'
+                        : feedback.type === 'error'
+                        ? 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.8)]'
+                        : 'text-cyan-400'
                     }`}
                   >
-                    {note}
+                    {feedback.text}
                   </div>
-                ))}
-                {currentIndex + 5 < targetNotes.length && (
-                  <div className="text-3xl font-bold text-gray-500 opacity-40 tracking-widest">...</div>
                 )}
               </div>
-            ) : (
-              currentTargetNote && (
-                <div className="text-6xl font-extrabold mb-4 tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-500 drop-shadow-[0_0_15px_rgba(34,211,238,0.5)] h-20 flex items-center justify-center">
-                  {currentTargetNote}
-                </div>
-              )
-            )}
-            <div className="h-8">
-              {feedback && (
-                <div
-                  className={`text-xl font-semibold animate-pulse ${
-                    feedback.type === 'success'
-                      ? 'text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.8)]'
-                      : feedback.type === 'error'
-                      ? 'text-red-400 drop-shadow-[0_0_8px_rgba(248,113,113,0.8)]'
-                      : 'text-cyan-400'
-                  }`}
-                >
-                  {feedback.text}
-                </div>
-              )}
-            </div>
-          </>
-        )}
-      </div>
+            </>
+          )}
+        </div>
+      )}
 
-      <Keyboard activeNotes={activeNotes} />
+      {level.type === 'theory' ? (
+        <div className="max-w-2xl w-full bg-gray-900/80 border border-amber-500/30 rounded-2xl p-8 shadow-[0_0_30px_rgba(245,158,11,0.15)] mb-8 backdrop-blur-sm">
+          {level.theoryContent?.map((paragraph, idx) => (
+            <p key={idx} className="text-gray-300 text-lg leading-relaxed mb-4 last:mb-0">
+              {paragraph}
+            </p>
+          ))}
+          <div className="mt-8 flex justify-center">
+            <button
+              onClick={handleNextLevel}
+              className="px-8 py-3 bg-gradient-to-r from-amber-600 to-orange-600 rounded-full font-bold text-lg hover:from-amber-500 hover:to-orange-500 transition-all shadow-[0_0_20px_rgba(245,158,11,0.4)] hover:shadow-[0_0_30px_rgba(245,158,11,0.6)] text-white"
+            >
+              我已了解，继续
+            </button>
+          </div>
+        </div>
+      ) : (
+        <Keyboard activeNotes={activeNotes} />
+      )}
 
       {/* 进度提示 */}
+<<<<<<< ours
+      {level.type !== 'theory' && targetNotes.length > 0 && (
+=======
       {isEarType ? (
         <div className="mt-8 text-gray-500 font-mono">
           进度: {Math.min(dictationRounds + 1, level?.rounds ?? 5)} / {level?.rounds ?? 5}
         </div>
       ) : targetNotes.length > 0 ? (
+>>>>>>> theirs
         <div className="mt-8 text-gray-500 font-mono">
           进度: {Math.min(currentIndex + 1, targetNotes.length)} / {targetNotes.length}
         </div>
       ) : null}
 
       {/* 结算弹窗 */}
-      {showSettlement && !level?.autoNext && (
+      {showSettlement && !level.autoNext && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.2)] max-w-md w-full text-center">
             <h2 className="text-3xl font-bold mb-4 text-cyan-400">
@@ -446,12 +476,26 @@ const LevelPlay: React.FC = () => {
             <p className="text-gray-300 mb-8">
               你已经成功完成了本关卡，继续你的音乐之旅吧。
             </p>
-            <button
-              onClick={handleFinish}
-              className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full font-bold text-lg hover:from-cyan-400 hover:to-blue-500 transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)]"
-            >
-              返回首页
-            </button>
+            <div className="flex flex-col space-y-4">
+              {level.id < LEVELS.length && (
+                <button
+                  onClick={handleNextLevel}
+                  className="w-full px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full font-bold text-lg hover:from-cyan-400 hover:to-blue-500 transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] text-white"
+                >
+                  继续下一关
+                </button>
+              )}
+              <button
+                onClick={handleFinish}
+                className={`w-full px-8 py-3 rounded-full font-bold text-lg transition-all ${
+                  level.id < LEVELS.length
+                    ? 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
+                    : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] text-white'
+                }`}
+              >
+                返回首页
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -466,7 +510,9 @@ const LevelPlay: React.FC = () => {
             <p className="text-gray-300 mb-8">
               错误次数过多（{errorCount} 次），即将返回重新学习...
             </p>
-            <div className="text-4xl font-mono text-rose-500 font-bold">{countdown}</div>
+            <div className="text-gray-500 font-mono text-xl animate-pulse">
+              {countdown}s
+            </div>
           </div>
         </div>
       )}

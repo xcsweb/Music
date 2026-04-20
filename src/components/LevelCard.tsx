@@ -46,13 +46,7 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, isUnlocked, onClick }) => 
       </p>
 
       <div className="mt-4 flex gap-2">
-        <span className={`text-xs px-2 py-1 rounded border 
-          ${!isUnlocked 
-            ? 'border-gray-600 text-gray-400 bg-gray-800'
-            : level.type === 'theory'
-              ? 'border-amber-500/30 text-amber-300 bg-amber-950/50'
-              : 'border-cyan-500/30 text-cyan-300 bg-cyan-950/50'}`}
-        >
+        <span className={`text-xs px-2 py-1 rounded border ${getBadgeStyle(level.type, isUnlocked)}`}>
           {getTypeLabel(level.type)}
         </span>
       </div>
@@ -60,19 +54,38 @@ const LevelCard: React.FC<LevelCardProps> = ({ level, isUnlocked, onClick }) => 
   );
 };
 
+// 获取徽章样式
+function getBadgeStyle(type: Level['type'], isUnlocked: boolean) {
+  if (!isUnlocked) {
+    return 'border-gray-600 text-gray-400 bg-gray-800';
+  }
+  switch (type) {
+    case 'theory':
+      return 'border-amber-500/30 text-amber-300 bg-amber-950/50';
+    case 'ear_training':
+      return 'border-fuchsia-500 text-white bg-fuchsia-600';
+    case 'ear_dictation':
+      return 'border-rose-500 text-white bg-rose-600';
+    default:
+      return 'border-cyan-500/30 text-cyan-300 bg-cyan-950/50';
+  }
+}
+
 // 辅助函数，用于将关卡类型转换为中文标签
 function getTypeLabel(type: Level['type']) {
-  const map: Record<Level['type'], string> = {
+  const labels: Record<Level['type'], string> = {
     teaching: '教学',
     single_note: '单音测试',
-    multi_note: '和弦测试',
+    multi_note: '多音测试',
     song: '曲目',
     review: '智能复习',
     practice: '练习',
     regression_test: '回归测试',
     theory: '乐理',
+    ear_training: '听音训练',
+    ear_dictation: '听写',
   };
-  return map[type] || type;
+  return labels[type] || type;
 }
 
 export default LevelCard;

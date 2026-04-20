@@ -40,7 +40,7 @@ export interface Level {
   id: number;
   title: string;
   description: string;
-  type: 'teaching' | 'single_note' | 'multi_note' | 'song' | 'review' | 'practice' | 'regression_test' | 'theory';
+  type: 'teaching' | 'single_note' | 'multi_note' | 'song' | 'review' | 'practice' | 'regression_test' | 'theory' | 'ear_training' | 'ear_dictation';
   targetNotes: string[] | string[][]; // 单音数组，或和弦/曲目数组
   requiredScore: number;
   requiredHits?: number;
@@ -49,6 +49,10 @@ export interface Level {
   fallbackLevelId?: number;
   autoNext?: boolean;
   theoryContent?: string[];
+  notePool?: string[];
+  rounds?: number;
+  replayLimit?: number;
+  requiredCorrectStreak?: number;
 }
 
 interface AppState extends UserProgress {

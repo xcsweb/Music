@@ -25,8 +25,7 @@ const LevelPlay: React.FC = () => {
   const [dictationTarget, setDictationTarget] = useState<string>('');
   const [dictationRounds, setDictationRounds] = useState(0);
   const [dictationStreak, setDictationStreak] = useState(0);
-  const [replaysLeft, setReplaysLeft] = useState(3);
-  const [countdown, setCountdown] = useState(0);
+  const [replaysLeft, setReplaysLeft] = useState(0);
   const synthRef = useRef<Tone.PolySynth | null>(null);
 
   const isEarType = level?.type === 'ear_training' || level?.type === 'ear_dictation';
@@ -92,28 +91,6 @@ const LevelPlay: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [level]);
 
-  // 失败自动返回重学逻辑
-  useEffect(() => {
-    if (showFailure) {
-      setCountdown(2);
-      const timer = setInterval(() => {
-        setCountdown((prev) => Math.max(0, prev - 1));
-      }, 1000);
-
-      const redirectTimer = setTimeout(() => {
-        if (level?.fallbackLevelId !== undefined) {
-          store.downgradeLevel(level.fallbackLevelId);
-        }
-        navigate('/');
-      }, 2000);
-
-      return () => {
-        clearInterval(timer);
-        clearTimeout(redirectTimer);
-      };
-    }
-  }, [showFailure, level?.fallbackLevelId, store, navigate]);
-
   // 处理没有复习音符的情况
   useEffect(() => {
     if (level?.type === 'review' && targetNotes.length === 0 && !isFinished) {
@@ -146,24 +123,7 @@ const LevelPlay: React.FC = () => {
           
           if (newRounds >= requiredRounds && newStreak >= requiredStreak) {
             setIsFinished(true);
-            if (level?.autoNext && level?.id < LEVELS.length) {
-              setFeedback({ text: '太棒了！即将进入下一关...', type: 'success' });
-              setTimeout(() => {
-                store.unlockLevel(level!.id + 1);
-                setCurrentIndex(0);
-                setIsFinished(false);
-                setFeedback(null);
-                setErrorCount(0);
-                setShowSettlement(false);
-                setDictationRounds(0);
-                setDictationStreak(0);
-                navigate('/level/' + (level!.id + 1));
-              }, 1500);
-            } else if (!level?.autoNext) {
-              setTimeout(() => setShowSettlement(true), 1000);
-            } else {
-              setTimeout(() => navigate('/'), 1500);
-            }
+            setTimeout(() => setShowSettlement(true), 1000);
           } else {
             setTimeout(() => startNextDictationRound(), 1000);
           }
@@ -192,24 +152,7 @@ const LevelPlay: React.FC = () => {
         if (pressedNote === currentTarget) {
           if (currentIndex + 1 >= targetNotes.length) {
             setIsFinished(true);
-            if (level?.autoNext && level?.id !== undefined && level.id < LEVELS.length) {
-              setFeedback({ text: '太棒了！即将进入下一关...', type: 'success' });
-              setTimeout(() => {
-                store.unlockLevel(level!.id + 1);
-                setCurrentIndex(0);
-                setIsFinished(false);
-                setFeedback(null);
-                setErrorCount(0);
-                setShowSettlement(false);
-                setDictationRounds(0);
-                setDictationStreak(0);
-                navigate('/level/' + (level!.id + 1));
-              }, 1500);
-            } else if (!level?.autoNext) {
-              setTimeout(() => setShowSettlement(true), 1000);
-            } else {
-              setTimeout(() => navigate('/'), 1500);
-            }
+            setTimeout(() => setShowSettlement(true), 1000);
           } else {
             setCurrentIndex((prev) => prev + 1);
           }
@@ -226,24 +169,7 @@ const LevelPlay: React.FC = () => {
           
           if (currentIndex + 1 >= targetNotes.length) {
             setIsFinished(true);
-            if (level?.autoNext && level?.id !== undefined && level.id < LEVELS.length) {
-              setFeedback({ text: '太棒了！即将进入下一关...', type: 'success' });
-              setTimeout(() => {
-                store.unlockLevel(level!.id + 1);
-                setCurrentIndex(0);
-                setIsFinished(false);
-                setFeedback(null);
-                setErrorCount(0);
-                setShowSettlement(false);
-                setDictationRounds(0);
-                setDictationStreak(0);
-                navigate('/level/' + (level!.id + 1));
-              }, 1500);
-            } else if (!level?.autoNext) {
-              setTimeout(() => setShowSettlement(true), 1000);
-            } else {
-              setTimeout(() => navigate('/'), 1500);
-            }
+            setTimeout(() => setShowSettlement(true), 1000);
           } else {
             setCurrentIndex((prev) => prev + 1);
           }
@@ -290,27 +216,12 @@ const LevelPlay: React.FC = () => {
     navigate('/');
   };
 
-  // Auto return logic for failure
-  useEffect(() => {
-    if (showFailure) {
-      setCountdown(2);
-      const timer = setInterval(() => {
-        setCountdown((prev) => Math.max(0, prev - 1));
-      }, 1000);
-
-      const redirectTimer = setTimeout(() => {
-        if (level?.fallbackLevelId !== undefined) {
-          store.downgradeLevel(level.fallbackLevelId);
-        }
-        navigate('/');
-      }, 2000);
-
-      return () => {
-        clearInterval(timer);
-        clearTimeout(redirectTimer);
-      };
+  const handleFailureFinish = () => {
+    if (level?.fallbackLevelId !== undefined) {
+      store.downgradeLevel(level.fallbackLevelId);
     }
-  }, [showFailure, level?.fallbackLevelId, store, navigate]);
+    navigate('/');
+  };
 
   if (!level) {
     return <div className="text-white p-8">关卡不存在</div>;
@@ -437,7 +348,7 @@ const LevelPlay: React.FC = () => {
       ) : null}
 
       {/* 结算弹窗 */}
-      {showSettlement && !level?.autoNext && (
+      {showSettlement && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.2)] max-w-md w-full text-center">
             <h2 className="text-3xl font-bold mb-4 text-cyan-400">
@@ -464,9 +375,14 @@ const LevelPlay: React.FC = () => {
               测试未通过
             </h2>
             <p className="text-gray-300 mb-8">
-              错误次数过多（{errorCount} 次），即将返回重新学习...
+              错误次数过多（{errorCount} 次），请重新学习之前的关卡。
             </p>
-            <div className="text-4xl font-mono text-rose-500 font-bold">{countdown}</div>
+            <button
+              onClick={handleFailureFinish}
+              className="px-8 py-3 bg-gradient-to-r from-red-500 to-rose-600 rounded-full font-bold text-lg hover:from-red-400 hover:to-rose-500 transition-all shadow-[0_0_20px_rgba(248,113,113,0.4)] hover:shadow-[0_0_30px_rgba(248,113,113,0.6)]"
+            >
+              返回重新学习
+            </button>
           </div>
         </div>
       )}
