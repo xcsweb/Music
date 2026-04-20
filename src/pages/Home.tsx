@@ -7,6 +7,12 @@ import LevelCard from '../components/LevelCard';
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const unlockedLevels = useStore((state) => state.unlockedLevels);
+  const currentLevel = useStore((state) => state.currentLevel);
+
+  // 找到当前进度所在的关卡
+  const maxUnlockedLevel = Math.max(...unlockedLevels, 1);
+  const resumeLevelId = Math.min(Math.max(currentLevel, maxUnlockedLevel), LEVELS.length);
+  const showResumeButton = resumeLevelId > 1;
 
   return (
     <div className="min-h-screen bg-black text-white p-8 overflow-hidden relative">
@@ -18,9 +24,18 @@ const Home: React.FC = () => {
         <h1 className="text-4xl md:text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 drop-shadow-[0_0_15px_rgba(6,182,212,0.8)] tracking-wider">
           音符宇宙探索
         </h1>
-        <p className="text-gray-400 max-w-xl mx-auto">
+        <p className="text-gray-400 max-w-xl mx-auto mb-8">
           通过科学的艾宾浩斯记忆法，轻松掌握五线谱。从基础单音到复杂和弦，点亮你的音乐天赋。
         </p>
+        
+        {showResumeButton && (
+          <button
+            onClick={() => navigate(`/level/${resumeLevelId}`)}
+            className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full font-bold text-lg hover:from-cyan-400 hover:to-blue-500 transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] text-white"
+          >
+            继续学习 (关卡 {resumeLevelId})
+          </button>
+        )}
       </header>
 
       <main className="max-w-6xl mx-auto">

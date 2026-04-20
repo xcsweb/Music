@@ -24,6 +24,10 @@ const LevelPlay: React.FC = () => {
   // 动态生成 review 模式的目标音符，并在组件挂载时只计算一次
   useEffect(() => {
     if (!level) return;
+    
+    // 更新当前学习的关卡记录
+    store.setCurrentLevel(level.id);
+
     if (level.type === 'review') {
       const now = Date.now();
       const notesToReview = store.failedNotes
@@ -45,9 +49,22 @@ const LevelPlay: React.FC = () => {
   useEffect(() => {
     if (level?.type === 'review' && targetNotes.length === 0 && !isFinished) {
       setIsFinished(true);
-      setShowSettlement(true);
+      if (level.autoNext && level.id < LEVELS.length) {
+        setFeedback({ text: '无需复习，即将进入下一关...', type: 'success' });
+        setTimeout(() => {
+          store.unlockLevel(level.id + 1);
+          setShowSettlement(false);
+          navigate(`/level/${level.id + 1}`);
+        }, 1500);
+      } else if (!level.autoNext) {
+        setShowSettlement(true);
+      } else {
+        setTimeout(() => {
+          navigate('/');
+        }, 1500);
+      }
     }
-  }, [level, targetNotes.length, isFinished]);
+  }, [level, targetNotes.length, isFinished, navigate, store]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -74,10 +91,16 @@ const LevelPlay: React.FC = () => {
                 setIsFinished(false);
                 setFeedback(null);
                 setErrorCount(0);
+                setShowSettlement(false);
                 navigate(`/level/${level.id + 1}`);
               }, 1500);
-            } else {
+            } else if (!level.autoNext) {
               setTimeout(() => setShowSettlement(true), 1000);
+            } else {
+              // autoNext is true but it's the last level, return to home
+              setTimeout(() => {
+                navigate('/');
+              }, 1500);
             }
           } else {
             setCurrentIndex((prev) => prev + 1);
@@ -103,10 +126,15 @@ const LevelPlay: React.FC = () => {
                 setIsFinished(false);
                 setFeedback(null);
                 setErrorCount(0);
+                setShowSettlement(false);
                 navigate(`/level/${level.id + 1}`);
               }, 1500);
-            } else {
+            } else if (!level.autoNext) {
               setTimeout(() => setShowSettlement(true), 1000);
+            } else {
+              setTimeout(() => {
+                navigate('/');
+              }, 1500);
             }
           } else {
             setCurrentIndex((prev) => prev + 1);
@@ -258,7 +286,7 @@ const LevelPlay: React.FC = () => {
       )}
 
       {/* 结算弹窗 */}
-      {showSettlement && (
+      {showSettlement && !level.autoNext && (
         <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-[0_0_50px_rgba(34,211,238,0.2)] max-w-md w-full text-center">
             <h2 className="text-3xl font-bold mb-4 text-cyan-400">

@@ -177,13 +177,13 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
       const whiteClasses = isPressed
         ? "bg-green-500/30 border-2 border-green-400 text-green-100 shadow-[0_0_20px_rgba(74,222,128,0.8),inset_0_0_15px_rgba(74,222,128,0.5)] z-0"
         : isActive
-          ? "bg-cyan-900/60 border-2 border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.6)] animate-pulse z-0"
+          ? "bg-red-900/60 border-2 border-red-500 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.8)] animate-pulse z-0"
           : "bg-gray-800/80 border-2 border-cyan-500/40 text-cyan-500/70 shadow-[0_0_10px_rgba(6,182,212,0.3)] hover:bg-gray-700/80 z-0";
 
       const blackClasses = isPressed
         ? "bg-green-500/30 border-2 border-green-400 text-green-100 shadow-[0_0_20px_rgba(74,222,128,0.8),inset_0_0_15px_rgba(74,222,128,0.5)] z-10"
         : isActive
-          ? "bg-cyan-900/60 border-2 border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.6)] animate-pulse z-10"
+          ? "bg-red-900/60 border-2 border-red-500 text-red-300 shadow-[0_0_15px_rgba(239,68,68,0.8)] animate-pulse z-10"
           : "bg-gray-900 border-2 border-fuchsia-500/50 text-fuchsia-500/70 shadow-[0_0_10px_rgba(217,70,239,0.4)] hover:bg-gray-800 z-10";
 
       const width = isWhite ? KEY_WIDTH_WHITE : KEY_WIDTH_BLACK;

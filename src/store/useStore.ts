@@ -75,6 +75,7 @@ export const useStore = create<AppState>()(
           unlockedLevels: state.unlockedLevels.includes(levelId)
             ? state.unlockedLevels
             : [...state.unlockedLevels, levelId],
+          currentLevel: Math.max(state.currentLevel, levelId),
         })),
 
       setCurrentLevel: (levelId: number) => set({ currentLevel: levelId }),
