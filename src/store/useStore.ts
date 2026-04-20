@@ -40,11 +40,24 @@ export interface Level {
   id: number;
   title: string;
   description: string;
-  type: 'teaching' | 'single_note' | 'multi_note' | 'song' | 'review' | 'practice' | 'regression_test';
+  type:
+    | 'teaching'
+    | 'single_note'
+    | 'multi_note'
+    | 'song'
+    | 'review'
+    | 'practice'
+    | 'regression_test'
+    | 'ear_training'
+    | 'ear_dictation';
   targetNotes: string[] | string[][]; // 单音数组，或和弦/曲目数组
   requiredScore: number;
   requiredHits?: number;
   sequence?: string[];
+  notePool?: string[];
+  rounds?: number;
+  replayLimit?: number;
+  requiredCorrectStreak?: number;
   maxErrors?: number;
   fallbackLevelId?: number;
 }

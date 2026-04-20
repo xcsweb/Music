@@ -68,6 +68,8 @@ function getTypeLabel(type: Level['type']) {
     review: '智能复习',
     practice: '练习',
     regression_test: '回归测试',
+    ear_training: '听音训练',
+    ear_dictation: '听写',
   };
   return map[type] || type;
 }
