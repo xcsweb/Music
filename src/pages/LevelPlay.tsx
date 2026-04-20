@@ -116,6 +116,18 @@ const LevelPlay: React.FC = () => {
     navigate('/');
   };
 
+  const handleNextLevel = () => {
+    if (level) {
+      store.unlockLevel(level.id + 1);
+      setCurrentIndex(0);
+      setFeedback(null);
+      setIsFinished(false);
+      setShowSettlement(false);
+      setErrorCount(0);
+      navigate(`/level/${level.id + 1}`);
+    }
+  };
+
   const handleFailureFinish = () => {
     if (level?.fallbackLevelId !== undefined) {
       store.downgradeLevel(level.fallbackLevelId);
@@ -215,12 +227,26 @@ const LevelPlay: React.FC = () => {
             <p className="text-gray-300 mb-8">
               你已经成功完成了本关卡，继续你的音乐之旅吧。
             </p>
-            <button
-              onClick={handleFinish}
-              className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full font-bold text-lg hover:from-cyan-400 hover:to-blue-500 transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)]"
-            >
-              返回首页
-            </button>
+            <div className="flex flex-col space-y-4">
+              {level.id < LEVELS.length && (
+                <button
+                  onClick={handleNextLevel}
+                  className="w-full px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full font-bold text-lg hover:from-cyan-400 hover:to-blue-500 transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] text-white"
+                >
+                  继续下一关
+                </button>
+              )}
+              <button
+                onClick={handleFinish}
+                className={`w-full px-8 py-3 rounded-full font-bold text-lg transition-all ${
+                  level.id < LEVELS.length
+                    ? 'bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white'
+                    : 'bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)] text-white'
+                }`}
+              >
+                返回首页
+              </button>
+            </div>
           </div>
         </div>
       )}
