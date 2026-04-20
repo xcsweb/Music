@@ -15,6 +15,8 @@ const LevelPlay: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFinished, setIsFinished] = useState(false);
   const [showSettlement, setShowSettlement] = useState(false);
+  const [showFailure, setShowFailure] = useState(false);
+  const [errorCount, setErrorCount] = useState(0);
   const [feedback, setFeedback] = useState<{ text: string; type: 'success' | 'error' | 'info' } | null>(null);
   const [targetNotes, setTargetNotes] = useState<string[]>([]);
 
@@ -29,7 +31,11 @@ const LevelPlay: React.FC = () => {
       setTargetNotes(notesToReview);
     } else {
       // 兼容所有模式，将可能的多维数组展平为一维数组
-      setTargetNotes(level.targetNotes.flat() as string[]);
+      let notes = level.targetNotes.flat() as string[];
+      if (level.requiredHits && notes.length === 1) {
+        notes = Array(level.requiredHits).fill(notes[0]);
+      }
+      setTargetNotes(notes);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [level]);
@@ -44,7 +50,7 @@ const LevelPlay: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isFinished || showSettlement) return;
+      if (isFinished || showSettlement || showFailure) return;
       if (e.repeat) return;
 
       const pressedNote = getNoteFromKey(e.key);
@@ -83,6 +89,15 @@ const LevelPlay: React.FC = () => {
         } else {
           setFeedback({ text: `错误！应该是 ${currentTarget}`, type: 'error' });
           store.recordFailedNote(currentTarget);
+          
+          setErrorCount((prev) => {
+            const newCount = prev + 1;
+            if (level?.maxErrors && newCount >= level.maxErrors) {
+              setIsFinished(true);
+              setTimeout(() => setShowFailure(true), 500);
+            }
+            return newCount;
+          });
         }
       }
     };
@@ -91,12 +106,19 @@ const LevelPlay: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentIndex, isFinished, showSettlement, level, targetNotes, store]);
+  }, [currentIndex, isFinished, showSettlement, showFailure, level, targetNotes, store]);
 
   // 结算处理
   const handleFinish = () => {
     if (level) {
       store.unlockLevel(level.id + 1);
+    }
+    navigate('/');
+  };
+
+  const handleFailureFinish = () => {
+    if (level?.fallbackLevelId !== undefined) {
+      store.downgradeLevel(level.fallbackLevelId);
     }
     navigate('/');
   };
@@ -109,7 +131,7 @@ const LevelPlay: React.FC = () => {
   // 教学模式下，高亮目标音符以供提示
   const activeNotes = level.type === 'teaching' && currentTargetNote ? [currentTargetNote] : [];
   
-  const isSequence = level.type === 'multi_note' || level.type === 'song';
+  const isSequence = level.type === 'multi_note' || level.type === 'song' || level.type === 'practice' || level.type === 'regression_test';
 
   return (
     <div className="min-h-screen bg-black text-white p-8 flex flex-col items-center justify-center relative overflow-hidden">
@@ -198,6 +220,26 @@ const LevelPlay: React.FC = () => {
               className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full font-bold text-lg hover:from-cyan-400 hover:to-blue-500 transition-all shadow-[0_0_20px_rgba(34,211,238,0.4)] hover:shadow-[0_0_30px_rgba(34,211,238,0.6)]"
             >
               返回首页
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 失败弹窗 */}
+      {showFailure && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-gray-900 border border-gray-800 p-8 rounded-2xl shadow-[0_0_50px_rgba(248,113,113,0.2)] max-w-md w-full text-center">
+            <h2 className="text-3xl font-bold mb-4 text-red-400">
+              测试未通过
+            </h2>
+            <p className="text-gray-300 mb-8">
+              错误次数过多（{errorCount} 次），请重新学习之前的关卡。
+            </p>
+            <button
+              onClick={handleFailureFinish}
+              className="px-8 py-3 bg-gradient-to-r from-red-500 to-rose-600 rounded-full font-bold text-lg hover:from-red-400 hover:to-rose-500 transition-all shadow-[0_0_20px_rgba(248,113,113,0.4)] hover:shadow-[0_0_30px_rgba(248,113,113,0.6)]"
+            >
+              返回重新学习
             </button>
           </div>
         </div>

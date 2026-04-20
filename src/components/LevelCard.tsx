@@ -66,6 +66,8 @@ function getTypeLabel(type: Level['type']) {
     multi_note: '和弦测试',
     song: '曲目',
     review: '智能复习',
+    practice: '练习',
+    regression_test: '回归测试',
   };
   return map[type] || type;
 }

@@ -39,15 +39,20 @@ export interface Level {
   id: number;
   title: string;
   description: string;
-  type: 'teaching' | 'single_note' | 'multi_note' | 'song' | 'review';
+  type: 'teaching' | 'single_note' | 'multi_note' | 'song' | 'review' | 'practice' | 'regression_test';
   targetNotes: string[] | string[][]; // 单音数组，或和弦/曲目数组
   requiredScore: number;
+  requiredHits?: number;
+  sequence?: string[];
+  maxErrors?: number;
+  fallbackLevelId?: number;
 }
 
 interface AppState extends UserProgress {
   // Actions
   unlockLevel: (levelId: number) => void;
   setCurrentLevel: (levelId: number) => void;
+  downgradeLevel: (levelId: number) => void;
   recordFailedNote: (note: string) => void;
   reviewNoteSuccess: (note: string) => void;
   resetProgress: () => void;
@@ -72,6 +77,12 @@ export const useStore = create<AppState>()(
         })),
 
       setCurrentLevel: (levelId: number) => set({ currentLevel: levelId }),
+
+      downgradeLevel: (levelId: number) =>
+        set((state) => ({
+          currentLevel: levelId,
+          unlockedLevels: state.unlockedLevels.filter((id) => id <= levelId),
+        })),
 
       recordFailedNote: (note: string) => {
         const now = Date.now();
