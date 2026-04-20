@@ -50,7 +50,7 @@ const LevelPlay: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isFinished || showSettlement || showFailure) return;
+      if (isFinished || showSettlement || showFailure || !level) return;
       if (e.repeat) return;
 
       const pressedNote = getNoteFromKey(e.key);
@@ -65,7 +65,19 @@ const LevelPlay: React.FC = () => {
         if (pressedNote === currentTarget) {
           if (currentIndex + 1 >= targetNotes.length) {
             setIsFinished(true);
-            setTimeout(() => setShowSettlement(true), 1000);
+            if (level.autoNext && level.id < LEVELS.length) {
+              setFeedback({ text: '太棒了！即将进入下一关...', type: 'success' });
+              setTimeout(() => {
+                store.unlockLevel(level.id + 1);
+                setCurrentIndex(0);
+                setIsFinished(false);
+                setFeedback(null);
+                setErrorCount(0);
+                navigate(`/level/${level.id + 1}`);
+              }, 1500);
+            } else {
+              setTimeout(() => setShowSettlement(true), 1000);
+            }
           } else {
             setCurrentIndex((prev) => prev + 1);
           }
@@ -82,7 +94,19 @@ const LevelPlay: React.FC = () => {
           
           if (currentIndex + 1 >= targetNotes.length) {
             setIsFinished(true);
-            setTimeout(() => setShowSettlement(true), 1000);
+            if (level.autoNext && level.id < LEVELS.length) {
+              setFeedback({ text: '太棒了！即将进入下一关...', type: 'success' });
+              setTimeout(() => {
+                store.unlockLevel(level.id + 1);
+                setCurrentIndex(0);
+                setIsFinished(false);
+                setFeedback(null);
+                setErrorCount(0);
+                navigate(`/level/${level.id + 1}`);
+              }, 1500);
+            } else {
+              setTimeout(() => setShowSettlement(true), 1000);
+            }
           } else {
             setCurrentIndex((prev) => prev + 1);
           }
@@ -106,7 +130,7 @@ const LevelPlay: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [currentIndex, isFinished, showSettlement, showFailure, level, targetNotes, store]);
+  }, [currentIndex, isFinished, showSettlement, showFailure, level, targetNotes, store, navigate]);
 
   // 结算处理
   const handleFinish = () => {

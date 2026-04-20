@@ -135,7 +135,8 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
 
     return KEYBOARD_KEYS.map((config) => {
       const isWhite = config.type === 'white';
-      const isPressed = pressedNotes.has(config.note) || activeNotes.includes(config.note);
+      const isPressed = pressedNotes.has(config.note);
+      const isActive = activeNotes.includes(config.note);
 
       // 计算按键位置
       const leftPosition = isWhite
@@ -146,14 +147,18 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
 
       // 动态样式
       const baseClasses = "absolute rounded-b-md flex flex-col justify-end items-center pb-4 cursor-pointer select-none transition-colors transition-shadow duration-200";
-      
+
       const whiteClasses = isPressed
         ? "bg-cyan-500/30 border-2 border-cyan-400 text-cyan-100 shadow-[0_0_20px_rgba(34,211,238,0.8),inset_0_0_15px_rgba(34,211,238,0.5)] z-0"
-        : "bg-gray-800/80 border-2 border-cyan-500/40 text-cyan-500/70 shadow-[0_0_10px_rgba(6,182,212,0.3)] hover:bg-gray-700/80 z-0";
+        : isActive
+          ? "bg-cyan-900/60 border-2 border-cyan-400 text-cyan-300 shadow-[0_0_15px_rgba(34,211,238,0.6)] animate-pulse z-0"
+          : "bg-gray-800/80 border-2 border-cyan-500/40 text-cyan-500/70 shadow-[0_0_10px_rgba(6,182,212,0.3)] hover:bg-gray-700/80 z-0";
 
       const blackClasses = isPressed
         ? "bg-fuchsia-500/40 border-2 border-fuchsia-400 text-fuchsia-100 shadow-[0_0_20px_rgba(232,121,249,0.8),inset_0_0_15px_rgba(232,121,249,0.5)] z-10"
-        : "bg-gray-900 border-2 border-fuchsia-500/50 text-fuchsia-500/70 shadow-[0_0_10px_rgba(217,70,239,0.4)] hover:bg-gray-800 z-10";
+        : isActive
+          ? "bg-fuchsia-900/60 border-2 border-fuchsia-400 text-fuchsia-300 shadow-[0_0_15px_rgba(232,121,249,0.6)] animate-pulse z-10"
+          : "bg-gray-900 border-2 border-fuchsia-500/50 text-fuchsia-500/70 shadow-[0_0_10px_rgba(217,70,239,0.4)] hover:bg-gray-800 z-10";
 
       const width = isWhite ? KEY_WIDTH_WHITE : KEY_WIDTH_BLACK;
       const height = isWhite ? 240 : 150;

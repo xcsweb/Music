@@ -46,6 +46,7 @@ export interface Level {
   sequence?: string[];
   maxErrors?: number;
   fallbackLevelId?: number;
+  autoNext?: boolean;
 }
 
 interface AppState extends UserProgress {
