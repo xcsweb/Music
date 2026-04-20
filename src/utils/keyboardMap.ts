@@ -28,6 +28,7 @@ export const keyboardToNoteMap: Record<string, string> = {
   'l': 'D5',
   'p': 'D#5',
   ';': 'E5',
+  '\'': 'F5',
   
   // 兼容大写字母输入（例如用户开启了 CapsLock）
   'A': 'C4',
@@ -47,6 +48,7 @@ export const keyboardToNoteMap: Record<string, string> = {
   'L': 'D5',
   'P': 'D#5',
   ':': 'E5', // ; 的 shift 状态
+  '"': 'F5', // ' 的 shift 状态
 };
 
 /**

@@ -2,6 +2,8 @@ import React, { useEffect, useState, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import * as Tone from 'tone';
 
+import { getNoteFromKey } from '../utils/keyboardMap';
+
 export interface KeyboardProps {
   /**
    * 当前按下的音符或提示的音符（例如：['C4', 'E4']）
@@ -34,6 +36,9 @@ const KEYBOARD_KEYS: KeyConfig[] = [
   { note: 'C5', key: 'K', type: 'white' },
   { note: 'C#5', key: 'O', type: 'black' },
   { note: 'D5', key: 'L', type: 'white' },
+  { note: 'D#5', key: 'P', type: 'black' },
+  { note: 'E5', key: ';', type: 'white' },
+  { note: 'F5', key: "'", type: 'white' },
 ];
 
 export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
@@ -79,8 +84,12 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
   // 处理按键按下
   const handleKeyDown = async (e: KeyboardEvent) => {
     if (e.repeat) return; // 防止长按重复触发
-    const key = e.key.toUpperCase();
-    const config = KEYBOARD_KEYS.find((k) => k.key === key);
+    
+    // 从映射表中获取音符，处理大小写和 shift 状态
+    const note = getNoteFromKey(e.key);
+    if (!note) return;
+    
+    const config = KEYBOARD_KEYS.find((k) => k.note === note);
 
     if (config) {
       await Tone.start(); // 确保音频上下文已启动
@@ -97,8 +106,10 @@ export const Keyboard: React.FC<KeyboardProps> = ({ activeNotes = [] }) => {
 
   // 处理按键抬起
   const handleKeyUp = (e: KeyboardEvent) => {
-    const key = e.key.toUpperCase();
-    const config = KEYBOARD_KEYS.find((k) => k.key === key);
+    const note = getNoteFromKey(e.key);
+    if (!note) return;
+    
+    const config = KEYBOARD_KEYS.find((k) => k.note === note);
 
     if (config) {
       setPressedNotes((prev) => {
