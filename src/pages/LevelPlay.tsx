@@ -317,10 +317,13 @@ const LevelPlay: React.FC = () => {
   }
 
   const currentTargetNote = targetNotes[currentIndex];
-  // 教学模式下，高亮目标音符以供提示
-  const activeNotes = level.type === 'teaching' && currentTargetNote ? [currentTargetNote] : [];
-  
-  const isSequence = level.type === 'multi_note' || level.type === 'song' || level.type === 'practice' || level.type === 'regression_test';
+  // 教学/练习/曲目模式下，高亮目标音符以供提示
+  // 听音模式下，仅在答错时显示正确答案的提示
+  const activeNotes = !isEarType 
+    ? (currentTargetNote ? [currentTargetNote] : []) 
+    : (feedback?.type === 'error' && level?.type === 'ear_training' && dictationTarget ? [dictationTarget] : []);
+
+  const isSequence = level?.type === 'multi_note' || level?.type === 'song' || level?.type === 'practice' || level?.type === 'regression_test';
 
   return (
     <div className="min-h-screen bg-black text-white p-8 flex flex-col items-center justify-center relative overflow-hidden">
