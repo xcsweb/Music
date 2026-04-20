@@ -1,0 +1,32 @@
+# Tasks
+- [x] Task 1: 初始化 React 项目与依赖安装: 使用 Vite 创建 React+TS 项目，安装 TailwindCSS、Zustand、Tone.js 和 Framer Motion，并配置基础的深色主题。
+  - [x] SubTask 1.1: 执行 Vite 初始化并安装基础依赖
+  - [x] SubTask 1.2: 配置 Tailwind CSS
+  - [x] SubTask 1.3: 设定路由与状态管理工具 Zustand
+- [x] Task 2: 核心数据模型与存储实现: 定义关卡数据结构、用户进度结构，实现基于 LocalStorage 的存取逻辑和遗忘曲线算法接口。
+  - [x] SubTask 2.1: 编写 Zustand Store 处理用户进度和解锁逻辑
+  - [x] SubTask 2.2: 实现遗忘曲线时间计算和错音管理机制
+- [x] Task 3: 钢琴音效引擎集成: 封装 Tone.js，实现按键到音频频率的映射与播放功能。
+  - [x] SubTask 3.1: 创建 AudioContext 与 Synth 实例
+  - [x] SubTask 3.2: 映射电脑键盘到音符 (如 A->C4, S->D4)
+- [x] Task 4: UI组件开发 - 虚拟键盘: 开发可交互的虚拟键盘组件，支持按键高亮、下压动画与事件监听。
+  - [x] SubTask 4.1: 设计键盘布局 (白键与黑键)
+  - [x] SubTask 4.2: 绑定键盘事件并结合 Framer Motion 实现交互反馈
+- [x] Task 5: 首页关卡地图开发: 实现基于卡片式的关卡展示，区分已解锁、当前、未解锁状态，并提供点击进入功能。
+  - [x] SubTask 5.1: 创建主页布局与卡片组件
+  - [x] SubTask 5.2: 结合 Zustand 渲染不同状态的关卡
+- [x] Task 6: 教学与测试关卡逻辑实现: 实现游戏的主循环界面，包含音符提示区、正确/错误反馈，以及关卡结算弹窗。
+  - [x] SubTask 6.1: 教学关卡：自由弹奏并高亮提示
+  - [x] SubTask 6.2: 单音测试关卡：显示音符要求输入，判断对错并记录
+  - [x] SubTask 6.3: 错音复习逻辑：在特定关卡或模式下加载错音进行测试
+- [x] Task 7: 进阶关卡扩展: 实现多音、简单曲目和复杂曲目的序列判断逻辑。
+  - [x] SubTask 7.1: 多音测试逻辑
+  - [x] SubTask 7.2: 歌曲序列的渲染与进度推进
+
+# Task Dependencies
+- [Task 2] depends on [Task 1]
+- [Task 3] depends on [Task 1]
+- [Task 4] depends on [Task 3]
+- [Task 5] depends on [Task 2]
+- [Task 6] depends on [Task 2, Task 4]
+- [Task 7] depends on [Task 6]
